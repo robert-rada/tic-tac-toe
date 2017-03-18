@@ -26,6 +26,8 @@ function [] = joc()
             fflush(stdout);
         end
     end
+
+    close all
 end
 
 % result:
@@ -65,8 +67,6 @@ function result = startGame(player_symbol)
             return;
         end
     end
-
-    close all
 end
 
 function drawBoard(board)
@@ -124,19 +124,48 @@ function new_board = computerMove(board, player_symbol)
     end
 end
 
+function new_board = computerMove(board, turn)
+    new_board = board;
+
+    if (turn == 1)
+        new_board(1, 1) = 1;
+        return
+    end
+    if (turn == 2)
+        if (board(2, 2) == 0)
+            new_board(2, 2) = 2;
+        else
+            new_board(1, 1) = 2;
+        end
+        return
+    end
+    if (turn == 3)
+        if (board(1, 2) == 2 || board(1, 3) == 2)
+            new_board(2, 1) = 1;
+        elseif (board(2, 1) == 2 || board(2, 2) == 2 || board(3, 1) == 2)
+            new_board(1, 2) = 1;
+        elseif (board(2, 3) == 2)
+            new_board(2, 2) = 1;
+        else
+            new_board(1, 3) = 1;
+        end
+        return
+    end
+end
+
 function state = checkBoard(board, player_symbol)
     state = 0;
 
     for x = 1 : 3
-        if (board(x, 1) == board(x, 2) && board(x, 2) == board(x, 3))
-            if (player_symbol == board(x, 1))
+        if (board(x, 1) == board(x, 2) && board(x, 2) == board(x, 3) && board(x, 1) != 0)
+            if (player_symbol ==  2 - board(x, 1))
                 state = 1;
             else
                 state = -1;
             end
             return
-        elseif (board(1, x) == board(2, x) && board(2, x) == board(3, x))
-            if (player_symbol == board(1, x))
+        elseif (board(1, x) == board(2, x) && board(2, x) == board(3, x) && board(1, x) != 0)
+            if (player_symbol ==  2 - board(1, x))
                 state = 1;
             else
                 state = -1;
@@ -145,16 +174,15 @@ function state = checkBoard(board, player_symbol)
         end 
     end
 
-    if (board(1, 1) == board(2, 2) && board(2, 2) == board(3, 3) ||
-        board(3, 1) == board(2, 2) && board(2, 2) == board(1, 3))
+    if (((board(1, 1) == board(2, 2) && board(2, 2) == board(3, 3)) || 
+        (board(3, 1) == board(2, 2) && board(2, 2) == board(1, 3))) && board(2, 2) != 0)
 
-        if (player_symbol == board(2, 2))
+        if (player_symbol == 2 - board(2, 2))
             state = 1;
         else
             state = -1;
         end
     end
-            
 end
 
 function drawX(x, y)
