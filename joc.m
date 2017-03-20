@@ -51,12 +51,12 @@ function result = startGame(player_symbol)
     drawBoard(board);
     result = 0;
 
-    for turn = 1 : 8
+    for turn = 1 : 9
 
         if (mod(turn + player_symbol, 2) == 0)
             board = playerMove(board, player_symbol);
         else
-            board = computerMove(board, player_symbol);
+            board = computerMove2(board, turn);
         end
 
         drawBoard(board);
@@ -90,6 +90,8 @@ function drawBoard(board)
             end
         end
     end
+
+    drawnow();
 end
 
 function new_board = playerMove(board, player_symbol)
@@ -100,6 +102,9 @@ function new_board = playerMove(board, player_symbol)
         if (buttons == 1)
             i = ceil(x);
             j = ceil(y);
+            if (i < 1 || i > 3 || j < 1 || j > 3)
+                continue;
+            end
             if (board(i, j) == 0)
                 new_board(i, j) = 2 - player_symbol;
                 return;
@@ -124,7 +129,79 @@ function new_board = computerMove(board, player_symbol)
     end
 end
 
-function new_board = computerMove(board, turn)
+function [best_x best_y max_win] = bkt1(turn, board)
+    player_symbol = mod(turn, 2);
+    max_win = -1;
+    best_x = 0;
+    best_y = 0;
+
+    if (turn == 10)
+        max_win = 10;
+        return;
+    end
+
+    for x = 1 : 3
+        for y = 1 : 3
+            if (board(x, y) == 0)
+                board(x, y) = 2 - player_symbol;
+
+                if (checkBoard(board, player_symbol) != 0)
+                    max_win = 1;
+                    best_x = x;
+                    best_y = y;
+                    return;
+                end
+
+                win = bkt2(turn+1, board);
+                if (win >= max_win)
+                    max_win = win;
+                    best_x = x;
+                    best_y = y;
+                end
+
+                board(x, y) = 0;
+            end
+        end
+    end
+end
+
+function win = bkt2(turn, board)
+    win = 0;
+    player_symbol = mod(turn, 2);
+
+    if (turn == 10)
+        return;
+    end
+
+    nr = 0;
+
+    for x = 1 : 3
+        for y = 1 : 3
+            if (board(x, y) == 0)
+                board(x, y) = 2 - player_symbol;
+
+                if (checkBoard(board, player_symbol) != 0)
+                    win = -1;
+                    return;
+                end
+
+                [a b t] = bkt1(turn + 1, board);
+                if (t == -1)
+                    win = -1;
+                    return;
+                end
+
+                nr += 1;
+                win += t;
+                board(x, y) = 0;
+            end
+        end
+    end
+
+    win /= nr;
+end
+
+function new_board = computerMove2(board, turn)
     new_board = board;
 
     if (turn == 1)
@@ -151,6 +228,9 @@ function new_board = computerMove(board, turn)
         end
         return
     end
+
+    [x y win] = bkt1(turn, board);
+    new_board(x, y) = 2 - mod(turn, 2);
 end
 
 function state = checkBoard(board, player_symbol)
