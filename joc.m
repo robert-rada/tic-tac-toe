@@ -71,15 +71,15 @@ end
 
 function drawBoard(board)
     hold off
-    plot([0, 0], [0, 3]);
+    plot([0, 0], [0, 3], "linewidth", 5);
     hold on
-    plot([0, 3], [3, 3]);
-    plot([0, 3], [0, 0]);
-    plot([3, 3], [0, 3]);
-    plot([1, 1], [0, 3]);
-    plot([2, 2], [0, 3]);
-    plot([0, 3], [1, 1]);
-    plot([0, 3], [2, 2]);
+    plot([0, 3], [3, 3], "linewidth", 5);
+    plot([0, 3], [0, 0], "linewidth", 5);
+    plot([3, 3], [0, 3], "linewidth", 5);
+    plot([1, 1], [0, 3], "linewidth", 5);
+    plot([2, 2], [0, 3], "linewidth", 5);
+    plot([0, 3], [1, 1], "linewidth", 5);
+    plot([0, 3], [2, 2], "linewidth", 5);
 
     for x = 1 : 3
         for y = 1 : 3
@@ -266,16 +266,16 @@ function state = checkBoard(board, player_symbol)
 end
 
 function drawX(x, y)
-    plot([x+0.25 x+0.75], [y+0.25 y+0.75]);
-    plot([x+0.25 x+0.75], [y+0.75 y+0.25]);
+    plot([x+0.25 x+0.75], [y+0.25 y+0.75], "linewidth", 5);
+    plot([x+0.25 x+0.75], [y+0.75 y+0.25], "linewidth", 5);
 end
 
 function drawO(x, y)
-    radius = 0.4;
+    radius = 0.3;
     t = linspace(0,2*pi,100)'; 
     cx = radius .* cos(t) + x + 0.5; 
     cy = radius .* sin(t) + y + 0.5; 
-    plot(cx,cy); 
+    plot(cx,cy, "linewidth", 5); 
 end
 
 function input = startQuery()
