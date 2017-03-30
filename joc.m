@@ -3,6 +3,11 @@ function [] = joc()
     lose = 0;
     draw = 0;
 
+    disp("play by clicking on the graph");
+    fflush(stdout);
+
+    initWindow();
+
     running = 1;
     while (running)
         input = startQuery();
@@ -12,22 +17,51 @@ function [] = joc()
         else
             result = startGame(input);
             if (result == -1)
-                disp("LOSE");
                 lose += 1;
+                endGame("LOSS", win, draw, lose);
             elseif (result == 0)
-                disp("DRAW");
                 draw += 1;
+                endGame("DRAW", win, draw, lose);
             elseif (result == 1)
-                disp("WIN");
                 win += 1;
+                endGame("WIN", win, draw, lose);
             end
 
-            printf("%d wins | %d draws | %d losses\n", win, draw, lose);
-            fflush(stdout);
         end
     end
 
     close all
+end
+
+function [] = endGame(result, win, draw, lose)
+    result_message = text(0, 3.3, result);
+    set(result_message, "fontsize", 30);
+    set(result_message, "color", "BLUE");
+
+    score = mat2str(win);
+    score = [score " WINS | " mat2str(draw) " DRAWS | "];
+    score = [score mat2str(lose) " LOSSES"];
+    score_message = text(-1.4, -0.4, score);
+    set(score_message, "fontsize", 30);
+    set(score_message, "color", "BLUE");
+
+    countdown = "STARTING NEW GAME IN  ";
+    countdown_message = text(1.7, 3.3, countdown);
+    set(countdown_message, "fontsize", 13);
+    set(countdown_message, "color", "BLUE");
+
+    for i = 3 : -1 : 1
+        countdown(length(countdown)) = mat2str(i);
+        set(countdown_message, "string", countdown);
+        pause(0.98);
+    end
+end
+
+function [] = initWindow()
+    clf
+    axis([-0.5 3.5 -0.5 3.5], "square", "equal");
+    axis off
+    hold on
 end
 
 % result:
@@ -46,8 +80,9 @@ end
 
 function result = startGame(player_symbol)
 
+    initWindow();
+
     board = zeros(3, 3);
-    close all
     drawBoard(board);
     result = 0;
 
@@ -61,7 +96,7 @@ function result = startGame(player_symbol)
 
         drawBoard(board);
 
-        check = checkBoard(board, player_symbol);
+        check = checkBoard(1, board, player_symbol);
         if (check != 0)
             result = check;
             return;
@@ -70,9 +105,8 @@ function result = startGame(player_symbol)
 end
 
 function drawBoard(board)
-    hold off
+
     plot([0, 0], [0, 3], "linewidth", 5);
-    hold on
     plot([0, 3], [3, 3], "linewidth", 5);
     plot([0, 3], [0, 0], "linewidth", 5);
     plot([3, 3], [0, 3], "linewidth", 5);
@@ -145,7 +179,7 @@ function [best_x best_y max_win] = bkt1(turn, board)
             if (board(x, y) == 0)
                 board(x, y) = 2 - player_symbol;
 
-                if (checkBoard(board, player_symbol) != 0)
+                if (checkBoard(0, board, player_symbol) != 0)
                     max_win = 1;
                     best_x = x;
                     best_y = y;
@@ -180,7 +214,7 @@ function win = bkt2(turn, board)
             if (board(x, y) == 0)
                 board(x, y) = 2 - player_symbol;
 
-                if (checkBoard(board, player_symbol) != 0)
+                if (checkBoard(0, board, player_symbol) != 0)
                     win = -1;
                     return;
                 end
@@ -233,7 +267,7 @@ function new_board = computerMove2(board, turn)
     new_board(x, y) = 2 - mod(turn, 2);
 end
 
-function state = checkBoard(board, player_symbol)
+function state = checkBoard(print, board, player_symbol)
     state = 0;
 
     for x = 1 : 3
@@ -243,6 +277,11 @@ function state = checkBoard(board, player_symbol)
             else
                 state = -1;
             end
+
+            if (print == 1)
+                plot([x-0.5 x-0.5], [0.25 2.75], "linewidth", 10, "color", "RED");
+            end
+
             return
         elseif (board(1, x) == board(2, x) && board(2, x) == board(3, x) && board(1, x) != 0)
             if (player_symbol ==  2 - board(1, x))
@@ -250,17 +289,39 @@ function state = checkBoard(board, player_symbol)
             else
                 state = -1;
             end
+
+            if (print == 1)
+                plot([0.25 2.75], [x-0.5 x-0.5], "linewidth", 10, "color", "RED");
+            end
+
             return
         end 
     end
 
-    if (((board(1, 1) == board(2, 2) && board(2, 2) == board(3, 3)) || 
-        (board(3, 1) == board(2, 2) && board(2, 2) == board(1, 3))) && board(2, 2) != 0)
+    if ((board(1, 1) == board(2, 2) && board(2, 2) == board(3, 3)) 
+        && board(2, 2) != 0)
 
         if (player_symbol == 2 - board(2, 2))
             state = 1;
         else
             state = -1;
+        end
+
+        if (print == 1)
+            plot([0.25 2.75], [0.25 2.75], "linewidth", 10, "color", "RED");
+        end
+    end
+
+    if ((board(3, 1) == board(2, 2) && board(2, 2) == board(1, 3)) && board(2, 2) != 0)
+
+        if (player_symbol == 2 - board(2, 2))
+            state = 1;
+        else
+            state = -1;
+        end
+
+        if (print == 1)
+            plot([0.25 2.75], [2.75 0.25], "linewidth", 10, "color", "RED");
         end
     end
 end
@@ -278,14 +339,50 @@ function drawO(x, y)
     plot(cx,cy, "linewidth", 5); 
 end
 
+function [] = drawSquare(x1, y1, x2, y2)
+    plot([x1 x1], [y1 y2], "linewidth", 5);
+    plot([x2 x2], [y1 y2], "linewidth", 5);
+    plot([x1 x2], [y1 y1], "linewidth", 5);
+    plot([x1 x2], [y2 y2], "linewidth", 5);
+end
+
 function input = startQuery()
-    disp("\n\n");
-    disp("Press x to start with X");
-    disp("Press 0 to start with 0");
-    disp("Press q to quit");
-    fflush(stdout);
+    initWindow();
+
+    message = text(0.5, 2.5, "Choose X or O");
+    set(message, "fontsize", 30);
+    set(message, "color", "blue");
+    drawSquare(0.5, 1, 1.5, 2);
+    drawSquare(1.5, 1, 2.5, 2);
+    drawX(0.5, 1);
+    drawO(1.5, 1);
+    drawSquare(0.5, 0, 2.5, 0.7);
+    exit_message = text(1, 0.33, "EXIT");
+    set(exit_message, "fontsize", 50);
+    set(exit_message, "color", "blue");
 
     stop = 0;
+    while (stop == 0)
+        stop = 1;
+        [x y button] = ginput(1);
+        
+        if (button != 1)
+            stop = 0;
+            continue;
+        end
+
+        if (x >= 0.5 && x <= 1.5 && y >= 1 && y <= 2)
+            input = 1;
+        elseif (x >= 1.5 && x <= 2.5 && y >= 1 && y <= 2)
+            input = 0;
+        elseif (x >= 0.5 && x <= 2.5 && y >= 0 && y <= 0.7)
+            input = -1;
+        else
+            stop = 0;
+        end
+    end
+
+    stop = 1;
     while (stop == 0)
         stop = 1;
         input = kbhit();
