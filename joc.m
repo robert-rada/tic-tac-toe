@@ -3,7 +3,7 @@ function [] = joc()
     lose = 0;
     draw = 0;
 
-    disp("play by clicking on the graph");
+    disp("Play by clicking on the figure");
     fflush(stdout);
 
     initWindow();
@@ -26,7 +26,6 @@ function [] = joc()
                 win += 1;
                 endGame("WIN", win, draw, lose);
             end
-
         end
     end
 
@@ -34,6 +33,8 @@ function [] = joc()
 end
 
 function [] = endGame(result, win, draw, lose)
+    % afiseaza scorul, restarteaza jocul peste 3 secunde
+    
     result_message = text(0, 3.3, result);
     set(result_message, "fontsize", 30);
     set(result_message, "color", "BLUE");
@@ -80,6 +81,7 @@ end
 
 function result = startGame(player_symbol)
 
+    % incepe o runda
     initWindow();
 
     board = zeros(3, 3);
@@ -88,16 +90,21 @@ function result = startGame(player_symbol)
 
     for turn = 1 : 9
 
+        % acutalizeaza tabla dupa mutarea unui jucator
         if (mod(turn + player_symbol, 2) == 0)
             board = playerMove(board, player_symbol);
         else
-            board = computerMove2(board, turn);
+            board = computerMove(board, turn);
         end
 
         drawBoard(board);
 
+        % verifica daca jocul trebuie oprit
         check = checkBoard(1, board, player_symbol);
         if (check != 0)
+            % daca unul din jucatori a castigat opreste
+            % result va ramane 0 daca nu se ajunge aici (egalitate)
+
             result = check;
             return;
         end
@@ -105,6 +112,7 @@ function result = startGame(player_symbol)
 end
 
 function drawBoard(board)
+    % deseneaza tabla de joc
 
     plot([0, 0], [0, 3], "linewidth", 5);
     plot([0, 3], [3, 3], "linewidth", 5);
@@ -129,6 +137,8 @@ function drawBoard(board)
 end
 
 function new_board = playerMove(board, player_symbol)
+    % preia mutarea jucatorului
+
     new_board = board;
 
     while (1)
@@ -147,30 +157,18 @@ function new_board = playerMove(board, player_symbol)
     end
 end
 
-function new_board = computerMove(board, player_symbol)
-    new_board = board;
-
-    while (1)
-        [x, y, buttons] = ginput(1);
-        if (buttons == 1)
-            i = ceil(x);
-            j = ceil(y);
-            if (board(i, j) == 0)
-                new_board(i, j) = 2 - (1 - player_symbol);
-                return;
-            end
-        end
-    end
-end
-
 function [best_x best_y max_win] = bkt1(turn, board)
+    % incearca toate mutarile posibile si simuleaza jocul in continuare
+    % pentru a calcula sansa de victorie pentru fiecare mutare si intoarce
+    % mutarea cu cea mai mare sansa de victorie
+
     player_symbol = mod(turn, 2);
     max_win = -1;
     best_x = 0;
     best_y = 0;
 
     if (turn == 10)
-        max_win = 10;
+        max_win = 0;
         return;
     end
 
@@ -200,6 +198,10 @@ function [best_x best_y max_win] = bkt1(turn, board)
 end
 
 function win = bkt2(turn, board)
+    % intoarce media sansei de victorie data de toate mutarile posibile
+    % ale jucatorului. in cazul in care exista sansa de a pierde, se 
+    % intoarce -1
+
     win = 0;
     player_symbol = mod(turn, 2);
 
@@ -235,7 +237,12 @@ function win = bkt2(turn, board)
     win /= nr;
 end
 
-function new_board = computerMove2(board, turn)
+function new_board = computerMove(board, turn)
+    % calculatorul face o mutare.
+    % primele 2 mutari pentru X si prima mutare pentru 0 sunt prestabilite.
+    % pentru celelalte mutari se face backtracking pentru a gasi mutarea
+    % optima.
+
     new_board = board;
 
     if (turn == 1)
@@ -268,10 +275,22 @@ function new_board = computerMove2(board, turn)
 end
 
 function state = checkBoard(print, board, player_symbol)
+    % verifica daca unul din jucatori a castigat;
+
+    % daca parametrul print = 1, se si afiseaza o linie rosie care
+    % marcheaza linia care contine acelasi simbol;
+
+    % state = 1 -> victorie
+    % state = 0 -> egal
+    % state = -1-> infrangere
+
     state = 0;
 
+    % verifica liniile orizontale si cele verticale
     for x = 1 : 3
-        if (board(x, 1) == board(x, 2) && board(x, 2) == board(x, 3) && board(x, 1) != 0)
+        if (board(x, 1) == board(x, 2) && board(x, 2) == board(x, 3) &&
+                board(x, 1) != 0)
+
             if (player_symbol ==  2 - board(x, 1))
                 state = 1;
             else
@@ -279,11 +298,14 @@ function state = checkBoard(print, board, player_symbol)
             end
 
             if (print == 1)
-                plot([x-0.5 x-0.5], [0.25 2.75], "linewidth", 10, "color", "RED");
+                plot([x-0.5 x-0.5], [0.25 2.75], "linewidth", 10, "color",
+                        "RED");
             end
 
             return
-        elseif (board(1, x) == board(2, x) && board(2, x) == board(3, x) && board(1, x) != 0)
+        elseif (board(1, x) == board(2, x) && board(2, x) == board(3, x) &&
+                board(1, x) != 0)
+
             if (player_symbol ==  2 - board(1, x))
                 state = 1;
             else
@@ -291,13 +313,15 @@ function state = checkBoard(print, board, player_symbol)
             end
 
             if (print == 1)
-                plot([0.25 2.75], [x-0.5 x-0.5], "linewidth", 10, "color", "RED");
+                plot([0.25 2.75], [x-0.5 x-0.5], "linewidth", 10, "color",
+                        "RED");
             end
 
             return
         end 
     end
 
+    % verifica diagonalele
     if ((board(1, 1) == board(2, 2) && board(2, 2) == board(3, 3)) 
         && board(2, 2) != 0)
 
@@ -312,7 +336,8 @@ function state = checkBoard(print, board, player_symbol)
         end
     end
 
-    if ((board(3, 1) == board(2, 2) && board(2, 2) == board(1, 3)) && board(2, 2) != 0)
+    if ((board(3, 1) == board(2, 2) && board(2, 2) == board(1, 3)) &&
+            board(2, 2) != 0)
 
         if (player_symbol == 2 - board(2, 2))
             state = 1;
@@ -347,6 +372,10 @@ function [] = drawSquare(x1, y1, x2, y2)
 end
 
 function input = startQuery()
+    % meniul de dinainte de o runda de joc
+
+    % jucatorul poate alege sa inceapa cu X, sa inceapa cu 0 sau as inchida
+    % jocul dand click pe unul din butoane
     initWindow();
 
     message = text(0.5, 2.5, "Choose X or O");
@@ -376,22 +405,6 @@ function input = startQuery()
         elseif (x >= 1.5 && x <= 2.5 && y >= 1 && y <= 2)
             input = 0;
         elseif (x >= 0.5 && x <= 2.5 && y >= 0 && y <= 0.7)
-            input = -1;
-        else
-            stop = 0;
-        end
-    end
-
-    stop = 1;
-    while (stop == 0)
-        stop = 1;
-        input = kbhit();
-
-        if (input == 'x' || input == 'X')
-            input = 1;
-        elseif (input == '0' || input == 'o' || input == 'O')
-            input = 0;
-        elseif (input == 'q' || input == 'Q' || input == 27)
             input = -1;
         else
             stop = 0;
