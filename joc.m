@@ -386,7 +386,7 @@ function input = startQuery()
     drawX(0.5, 1);
     drawO(1.5, 1);
     drawSquare(0.5, 0, 2.5, 0.7);
-    exit_message = text(1, 0.33, "EXIT");
+    exit_message = text(0.85, 0.33, "EXIT");
     set(exit_message, "fontsize", 50);
     set(exit_message, "color", "blue");
 
